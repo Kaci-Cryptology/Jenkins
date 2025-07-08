@@ -1,6 +1,6 @@
 node {
     stage('Clone') {
-        git 'https://github.com/Kaci-Cryptology/Jenkins.git'
+        git branch: 'main', url: 'https://github.com/Kaci-Cryptology/Jenkins.git'
     }
     stage('Build') {
         sh '''javac Main.java'''
