@@ -1,19 +1,31 @@
+def pipelineContext = [:]
 node {
-    def app
-    
-    stage('Clone') {
-        checkout scm
-    }
-    
-    stage('Build image') {
-        app = docker.build("xavki/nginx")
-    }
-    
-    stage('Test image') {
-        docker.image('xavki/nginx').withRun('-p 80:80') { c -> 
-            sh 'docker ps'
-            sh 'curl localhost'
-        }
-    }
-}
 
+   def registryProject = 'registry.gitlab.com/dz6061801/jenkins'
+	 def IMAGE = "${registryProject}:v${env.BUILD_ID}"
+
+	 echo "IMAGE = $IMAGE"
+
+    stage('Clone') {
+			checkout scm
+		}
+
+		def img = stage('Build') {
+					docker.build("$IMAGE",  '.')
+		}
+	
+		stage('Run') {
+					img.withRun("--name run-$BUILD_ID -p 80:80") { c ->
+						    sleep 5
+                                                    sh "curl -v http://localhost:80"
+          }					
+		}
+
+		stage('Push') {
+					docker.withRegistry('https://registry.gitlab.com', 'reg1') {
+							img.push 'latest'
+              img.push()
+					}
+		}
+ 
+}
